@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Biblioteca — Panel Usuario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon-biblioteca">
+        <img src="../img/LOGO-SENA.jpg" alt="Logo SENA" class="sidebar-logo-img" />
+      </div>
+      <h4>Biblioteca SENA</h4>
+      <p id="nombre-usuario">Cargando...</p>
+    </div>
+    <nav>
+      <a href="index.html" class="activo">
+        <span class="icono">
+          <img src="../img/logo-equipos.png" alt="Equipos Disponibles" class="sidebar-icon-img" />
+        </span>Equipos Disponibles</a>
+      <a href="prestamo.html">
+        <span class="icono">
+          <img src="../img/logo-prestamos.png" alt="Mis Préstamos" class="sidebar-icon-img" />
+        </span>Mis Préstamos</a>
+      <a href="sala.html">
+        <span class="icono">
+          <img src="../img/logo-calendario.png" alt="Reservar Sala" class="sidebar-icon-img" />
+        </span>Reservar Sala</a>
+      <a href="#" onclick="cerrarSesion()">
+        <span class="icono">
+          <img src="../img/icon-cerrarsecion.png" alt="Cerrar Sesión" class="sidebar-icon-img" />
+        </span>Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <main class="contenido-principal usuario-panel">
+
+    <header class="admin-page-hero">
+      <div class="admin-page-hero-text">
+        <h1>Equipos disponibles</h1>
+        <p>Consulta el estado de los equipos y solicita un préstamo cuando lo necesites</p>
+      </div>
+      <div class="admin-page-hero-actions">
+        <button type="button" class="btn btn-primary" onclick="abrirModalPrestamo()">Solicitar préstamo</button>
+      </div>
+    </header>
+
+    <div class="card-custom admin-toolbar mb-4">
+      <div class="card-body-custom">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Filtrar por tipo</label>
+            <select class="form-select" id="filtro-tipo" onchange="cargarEquipos()">
+              <option value="">Todos los tipos</option>
+              <option value="computador_portatil">Computador portátil</option>
+              <option value="video_beam">Video beam</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltro()">Mostrar todos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="usuario-leyenda">
+      <span class="usuario-leyenda-item">
+        <span class="usuario-leyenda-swatch usuario-leyenda-swatch--libre" aria-hidden="true"></span>
+        Disponible
+      </span>
+      <span class="usuario-leyenda-item">
+        <span class="usuario-leyenda-swatch usuario-leyenda-swatch--ocupado" aria-hidden="true"></span>
+        Ocupado
+      </span>
+      <span class="usuario-leyenda-hint">Usa «Solicitar préstamo» para elegir equipos en el modal.</span>
+    </div>
+
+    <div id="contenedor-equipos">
+      <div class="loading"><div class="spinner"></div><p>Cargando equipos...</p></div>
+    </div>
+
+  </main>
+
+  <!-- ── MODAL SOLICITAR PRÉSTAMO ─────────────────────────── -->
+  <div class="modal fade" id="modalPrestamo" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content modal-sena">
+
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Solicitar préstamo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="row g-4">
+
+            <!-- Datos del solicitante -->
+            <div class="col-md-5">
+              <h6 class="fw-bold mb-3 text-secondary">Tus datos</h6>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nombre completo <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="prestamo-nombre" placeholder="Tu nombre completo" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Documento de identidad <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="prestamo-documento" placeholder="Tu número de documento" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Dependencia <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="prestamo-dependencia" placeholder="Ej: Coordinación Académica..." />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Fecha de salida <span class="text-danger">*</span></label>
+                <input type="datetime-local" class="form-control" id="prestamo-fecha-salida" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Observaciones</label>
+                <textarea class="form-control" id="prestamo-observaciones" rows="3" placeholder="Información adicional (opcional)"></textarea>
+              </div>
+
+              <div class="usuario-aviso-recibido">
+                Al confirmar, deberás usar <strong>Confirmar recibido</strong> por cada equipo cuando lo tengas en tus manos.
+              </div>
+            </div>
+
+            <!-- Selección de equipos -->
+            <div class="col-md-7">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-secondary">Selección de equipos</h6>
+                <span class="contador-seleccion" id="contador-seleccion">0 seleccionados</span>
+              </div>
+
+              <div class="mb-3">
+                <select class="form-select form-select-sm" id="modal-filtro-tipo" onchange="cargarEquiposModal()">
+                  <option value="">Todos los tipos</option>
+                  <option value="computador_portatil">Computador portátil</option>
+                  <option value="video_beam">Video beam</option>
+                </select>
+              </div>
+
+              <div id="grilla-equipos-modal" class="usuario-grilla-modal">
+                <div class="loading"><div class="spinner"></div><p>Cargando...</p></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="solicitarPrestamo()">Confirmar préstamo</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/api.js"></script>
+  <script>
+
+    // ── VERIFICAR SESIÓN ─────────────────────────────────────
+    const token = localStorage.getItem('token');
+    const usuarioData = localStorage.getItem('usuario');
+    if (!token || !usuarioData) { window.location.href = '../login.html'; throw new Error('Sin sesión'); }
+    const usuario = JSON.parse(usuarioData);
+    if (usuario.rol === 'admin') { window.location.href = '../index.html'; throw new Error('Redirigiendo a admin'); }
+    document.getElementById('nombre-usuario').textContent = usuario.nombreCompleto;
+
+    // ── CERRAR SESIÓN ────────────────────────────────────────
+    const cerrarSesion = () => {
+      if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        window.location.href = '../login.html';
+      }
+    };
+
+    // ── ESTADO GLOBAL ────────────────────────────────────────
+    let todosLosEquipos = [];
+    let equiposSeleccionados = [];
+
+    // ── CARGAR VISTA PRINCIPAL (solo lectura) ────────────────
+    const cargarEquipos = async () => {
+      const contenedor = document.getElementById('contenedor-equipos');
+      contenedor.innerHTML = `<div class="loading"><div class="spinner"></div><p>Cargando equipos...</p></div>`;
+
+      try {
+        const tipo = document.getElementById('filtro-tipo').value;
+        const filtros = {};
+        if (tipo) filtros.tipo = tipo;
+
+        const respuesta = await equiposAPI.listar(filtros);
+        const equipos = respuesta.data;
+
+        if (equipos.length === 0) {
+          contenedor.innerHTML = `<div class="estado-vacio"><div class="icono-vacio">📭</div><p>No hay equipos registrados</p></div>`;
+          return;
+        }
+
+        const disponibles = equipos.filter(e => e.estado === 'disponible').length;
+        const ocupados    = equipos.filter(e => e.estado !== 'disponible').length;
+
+        contenedor.innerHTML = `
+          <div class="usuario-equipos-grid">
+            ${equipos.map(e => {
+              const libre = e.estado === 'disponible';
+              return `
+                <div class="equipo-chip ${libre ? 'disponible' : 'ocupado'}" style="cursor:default;">
+                  <span class="chip-icono">${e.tipo === 'computador_portatil' ? '💻' : '📽️'}</span>
+                  <div class="chip-info">
+                    <div class="chip-nombre">${e.nombre}</div>
+                    <div class="chip-serial">${e.serial}</div>
+                  </div>
+                  <span class="chip-estado ${libre ? 'libre' : 'tomado'}">${libre ? 'Libre' : 'Ocupado'}</span>
+                </div>`;
+            }).join('')}
+          </div>
+          <p class="usuario-equipos-stats">
+            ${disponibles} disponible(s) · ${ocupados} ocupado(s)
+          </p>`;
+
+      } catch (error) {
+        contenedor.innerHTML = `<div class="estado-vacio"><div class="icono-vacio">❌</div><p>Error al cargar los equipos</p></div>`;
+      }
+    };
+
+    // ── ABRIR MODAL ──────────────────────────────────────────
+    const abrirModalPrestamo = async () => {
+      equiposSeleccionados = [];
+      actualizarContador();
+
+      document.getElementById('prestamo-nombre').value = usuario.nombreCompleto;
+      document.getElementById('prestamo-documento').value = usuario.documento;
+      document.getElementById('prestamo-dependencia').value = usuario.dependencia;
+      document.getElementById('prestamo-observaciones').value = '';
+      document.getElementById('modal-filtro-tipo').value = '';
+
+      const ahora = new Date();
+      ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+      document.getElementById('prestamo-fecha-salida').value = ahora.toISOString().slice(0, 16);
+
+      await cargarEquiposModal();
+      new bootstrap.Modal(document.getElementById('modalPrestamo')).show();
+    };
+
+    // ── CARGAR GRILLA EN EL MODAL ────────────────────────────
+    const cargarEquiposModal = async () => {
+      const grilla = document.getElementById('grilla-equipos-modal');
+      grilla.innerHTML = `<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>`;
+
+      try {
+        const tipo = document.getElementById('modal-filtro-tipo').value;
+        const filtros = {};
+        if (tipo) filtros.tipo = tipo;
+
+        const respuesta = await equiposAPI.listar(filtros);
+        todosLosEquipos = respuesta.data;
+        renderizarGrilla();
+      } catch (error) {
+        grilla.innerHTML = `<p style="color:#991b1b; padding:16px;">Error al cargar equipos</p>`;
+      }
+    };
+
+    // ── RENDERIZAR CHIPS ─────────────────────────────────────
+    const renderizarGrilla = () => {
+      const grilla = document.getElementById('grilla-equipos-modal');
+
+      if (todosLosEquipos.length === 0) {
+        grilla.innerHTML = `<div class="estado-vacio"><div class="icono-vacio">📭</div><p>No hay equipos</p></div>`;
+        return;
+      }
+
+      grilla.innerHTML = todosLosEquipos.map(equipo => {
+        const libre = equipo.estado === 'disponible';
+        const sel   = equiposSeleccionados.includes(equipo._id);
+        return `
+          <div
+            class="equipo-chip ${libre ? 'disponible' : 'ocupado'} ${sel ? 'seleccionado' : ''}"
+            id="chip-${equipo._id}"
+            onclick="${libre ? `toggleEquipo('${equipo._id}')` : ''}"
+            title="${libre ? 'Clic para seleccionar' : 'Este equipo está ocupado'}"
+          >
+            <span class="chip-icono">${equipo.tipo === 'computador_portatil' ? '💻' : '📽️'}</span>
+            <div class="chip-info">
+              <div class="chip-nombre">${equipo.nombre}</div>
+              <div class="chip-serial">${equipo.serial}</div>
+            </div>
+            <span class="chip-estado ${libre ? 'libre' : 'tomado'}">
+              ${libre ? (sel ? '✓' : 'Libre') : 'Ocupado'}
+            </span>
+          </div>`;
+      }).join('');
+    };
+
+    // ── TOGGLE SELECCIÓN ─────────────────────────────────────
+    const toggleEquipo = (id) => {
+      const idx = equiposSeleccionados.indexOf(id);
+      if (idx === -1) equiposSeleccionados.push(id);
+      else equiposSeleccionados.splice(idx, 1);
+      actualizarContador();
+      renderizarGrilla();
+    };
+
+    // ── CONTADOR ─────────────────────────────────────────────
+    const actualizarContador = () => {
+      const n = equiposSeleccionados.length;
+      document.getElementById('contador-seleccion').textContent =
+        n === 0 ? '0 seleccionados' : `${n} seleccionado${n > 1 ? 's' : ''}`;
+    };
+
+    // ── SOLICITAR PRÉSTAMO ───────────────────────────────────
+    const solicitarPrestamo = async () => {
+      const nombreCompleto = document.getElementById('prestamo-nombre').value.trim();
+      const documento      = document.getElementById('prestamo-documento').value.trim();
+      const dependencia    = document.getElementById('prestamo-dependencia').value.trim();
+      const fechaSalida    = document.getElementById('prestamo-fecha-salida').value;
+      const observaciones  = document.getElementById('prestamo-observaciones').value.trim();
+
+      if (!nombreCompleto || !documento || !dependencia || !fechaSalida) {
+        mostrarNotificacion('Por favor completa todos los campos obligatorios', 'advertencia');
+        return;
+      }
+      if (equiposSeleccionados.length === 0) {
+        mostrarNotificacion('Debes seleccionar al menos un equipo', 'advertencia');
+        return;
+      }
+
+      try {
+        const resultados = await Promise.all(
+          equiposSeleccionados.map(equipoId =>
+            fetch('http://localhost:3000/api/registros', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ nombreCompleto, documento, dependencia, equipoId, fechaSalida, observaciones }),
+            }).then(r => r.json())
+          )
+        );
+
+        const errores = resultados.filter(r => !r.success);
+
+        if (errores.length > 0) {
+          mostrarNotificacion(
+            `${equiposSeleccionados.length - errores.length} registrado(s). ${errores.length} falló: ${errores[0].message}`,
+            'advertencia'
+          );
+        } else {
+          const n = equiposSeleccionados.length;
+          mostrarNotificacion(
+            `¡${n} préstamo${n > 1 ? 's' : ''} solicitado${n > 1 ? 's' : ''}! Recuerda confirmar el recibido.`,
+            'exito'
+          );
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('modalPrestamo')).hide();
+        cargarEquipos();
+
+      } catch (error) {
+        mostrarNotificacion('Error al solicitar el préstamo', 'error');
+      }
+    };
+
+    // ── LIMPIAR FILTRO ───────────────────────────────────────
+    const limpiarFiltro = () => {
+      document.getElementById('filtro-tipo').value = '';
+      cargarEquipos();
+    };
+
+    cargarEquipos();
+
+  </script>
+
+</body>
+</html>
